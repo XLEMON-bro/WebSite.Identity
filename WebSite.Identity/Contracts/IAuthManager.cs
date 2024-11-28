@@ -8,6 +8,6 @@ namespace WebSite.Identity.Contracts
         Task<AuthResponseJsonModel> Register(RegisterJsonModel register);
         Task<AuthResponseJsonModel> Login(LoginJsonModel login);
         Task<AuthResponseJsonModel> VerifyAndGenerateToken(TokenJsonModel request);
-        Task Logout(TokenJsonModel request);
+        Task<bool> Logout(TokenJsonModel request);
     }
 }

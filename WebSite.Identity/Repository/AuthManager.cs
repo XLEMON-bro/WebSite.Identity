@@ -24,24 +24,20 @@ namespace WebSite.Identity.Repository
             _userManager = userManager;
         }
 
-        public async Task Logout(TokenJsonModel request)
+        public async Task<bool> Logout(TokenJsonModel tokenJsonModel)
         {
-            var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
-            var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(request.AccessToken);
-            var userEmail = tokenContent.Claims.ToList().FirstOrDefault(token => token.Type == JwtRegisteredClaimNames.Email)?.Value;
+            var user = await _userManager.FindByEmailAsync(GetEmailFromJwt(tokenJsonModel));
 
-            var user = await _userManager.FindByEmailAsync(userEmail);
-
-            if (user == null || user.Id != request.UserId)
+            if (user == null || user.Id != tokenJsonModel.UserId)
             {
-                return;
+                return false;
             }
 
             await _userManager.UpdateSecurityStampAsync(user);
 
             await _userManager.RemoveAuthenticationTokenAsync(user, Tokens.RefreshTokenProvider, Tokens.RefreshToken);
 
-            return;
+            return true;
         }
 
         public async Task<AuthResponseJsonModel> Login(LoginJsonModel loginJsonModel)
@@ -50,14 +46,14 @@ namespace WebSite.Identity.Repository
 
             if (user == null)
             {
-                return new AuthResponseJsonModel() { ErrorMessage = "Invalid Email" };
+                return new AuthResponseJsonModel() { ErrorMessage = $"No user with: {loginJsonModel.Email}" };
             }
 
             var isValidUser = await _userManager.CheckPasswordAsync(user, loginJsonModel.Password);
 
             if (!isValidUser)
             {
-                return new AuthResponseJsonModel() { ErrorMessage = "Invalid Password" };
+                return new AuthResponseJsonModel() { ErrorMessage = "Invalid Password for login." };
             }
 
             return new AuthResponseJsonModel()
@@ -76,7 +72,7 @@ namespace WebSite.Identity.Repository
 
             if (!result.Succeeded)
             {
-                return new AuthResponseJsonModel() { ErrorMessage = result.Errors.FirstOrDefault()?.Description ?? "Error with registration of User Account" };
+                return new AuthResponseJsonModel() { ErrorMessage = result.Errors.FirstOrDefault()?.Description ?? $"Can't create account for: {registerJsonModel.Email}" };
             }
 
             user = await _userManager.FindByEmailAsync(registerJsonModel.Email);
@@ -92,11 +88,7 @@ namespace WebSite.Identity.Repository
 
         public async Task<AuthResponseJsonModel> VerifyAndGenerateToken(TokenJsonModel tokenJsonModel)
         {
-            var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
-            var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(tokenJsonModel.AccessToken);
-            var userEmail = tokenContent.Claims.ToList().FirstOrDefault(token => token.Type == JwtRegisteredClaimNames.Email)?.Value;
-
-            var user = await _userManager.FindByEmailAsync(userEmail);
+            var user = await _userManager.FindByEmailAsync(GetEmailFromJwt(tokenJsonModel));
 
             if (user == null || user.Id != tokenJsonModel.UserId)
             {
@@ -140,7 +132,7 @@ namespace WebSite.Identity.Repository
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var roles = await _userManager.GetRolesAsync(user);
-            var roleClaims = roles.Select(x => new Claim(ClaimTypes.Role, x)).ToList();
+            var roleClaims = roles.Select(x => new Claim(UserClaims.Role, x)).ToList();
             var userClaims = await _userManager.GetClaimsAsync(user);
 
             var claims = new List<Claim>
@@ -158,6 +150,13 @@ namespace WebSite.Identity.Repository
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private string GetEmailFromJwt(TokenJsonModel tokenJsonModel)
+        {
+            var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
+            var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(tokenJsonModel.AccessToken);
+            return tokenContent.Claims.ToList().FirstOrDefault(token => token.Type == JwtRegisteredClaimNames.Email)?.Value ?? string.Empty;
         }
     }
 }

@@ -27,7 +27,7 @@ namespace WebSite.Identity.Controllers
 
             if (authResponse == null)
             {
-                return BadRequest();
+                return BadRequest("Error while regestering user.");
             }
 
             if (!string.IsNullOrEmpty(authResponse.ErrorMessage))
@@ -62,9 +62,12 @@ namespace WebSite.Identity.Controllers
         [Authorize]
         public async Task<IActionResult> Logout(TokenJsonModel request)
         {
-            await _authManager.Logout(request);
+            if(await _authManager.Logout(request))
+            {
+                return Ok("User logged out!");
+            }
 
-            return Ok("Logged out!");
+            return BadRequest("There no such user or id of user not same as in token!");
         }
 
         [HttpPost]
