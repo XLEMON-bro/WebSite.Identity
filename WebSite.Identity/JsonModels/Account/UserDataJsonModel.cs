@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace WebSite.Identity.JsonModels.Account
 {
-    public class TokenJsonModel
+    public class UserDataJsonModel
     {
         [JsonPropertyName("user_id")]
         [Required]

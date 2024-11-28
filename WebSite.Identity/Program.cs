@@ -54,6 +54,7 @@ namespace WebSite.Identity
             });
 
             builder.Services.AddScoped<IAuthManager, AuthManager>();
+            builder.Services.AddScoped<ITeamManager, TeamManager>();
 
             //Cors policy
             builder.Services.AddCors(opt =>

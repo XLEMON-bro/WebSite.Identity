@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using WebSite.Identity.Contracts;
 using WebSite.Identity.Data;
+using WebSite.Identity.Helpers;
 using WebSite.Identity.JsonModels.Account;
 using WebSite.Identity.Statics;
 
@@ -24,9 +25,9 @@ namespace WebSite.Identity.Repository
             _userManager = userManager;
         }
 
-        public async Task<bool> Logout(TokenJsonModel tokenJsonModel)
+        public async Task<bool> Logout(UserDataJsonModel tokenJsonModel)
         {
-            var user = await _userManager.FindByEmailAsync(GetEmailFromJwt(tokenJsonModel));
+            var user = await _userManager.FindByEmailAsync(JwtHelper.GetEmailFromJwt(tokenJsonModel.AccessToken));
 
             if (user == null || user.Id != tokenJsonModel.UserId)
             {
@@ -86,9 +87,9 @@ namespace WebSite.Identity.Repository
             };
         }
 
-        public async Task<AuthResponseJsonModel> VerifyAndGenerateToken(TokenJsonModel tokenJsonModel)
+        public async Task<AuthResponseJsonModel> VerifyAndGenerateToken(UserDataJsonModel tokenJsonModel)
         {
-            var user = await _userManager.FindByEmailAsync(GetEmailFromJwt(tokenJsonModel));
+            var user = await _userManager.FindByEmailAsync(JwtHelper.GetEmailFromJwt(tokenJsonModel.AccessToken));
 
             if (user == null || user.Id != tokenJsonModel.UserId)
             {
@@ -150,13 +151,6 @@ namespace WebSite.Identity.Repository
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private string GetEmailFromJwt(TokenJsonModel tokenJsonModel)
-        {
-            var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
-            var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(tokenJsonModel.AccessToken);
-            return tokenContent.Claims.ToList().FirstOrDefault(token => token.Type == JwtRegisteredClaimNames.Email)?.Value ?? string.Empty;
         }
     }
 }

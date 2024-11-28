@@ -60,7 +60,7 @@ namespace WebSite.Identity.Controllers
         [HttpPost]
         [Route("logout")]
         [Authorize]
-        public async Task<IActionResult> Logout(TokenJsonModel request)
+        public async Task<IActionResult> Logout(UserDataJsonModel request)
         {
             if(await _authManager.Logout(request))
             {
@@ -72,7 +72,7 @@ namespace WebSite.Identity.Controllers
 
         [HttpPost]
         [Route("refreshtoken")]
-        public async Task<IActionResult> ResfreshToken([FromBody]TokenJsonModel tokenJsonModel)
+        public async Task<IActionResult> ResfreshToken([FromBody]UserDataJsonModel tokenJsonModel)
         {
             var authResponse = await _authManager.VerifyAndGenerateToken(tokenJsonModel);
 
