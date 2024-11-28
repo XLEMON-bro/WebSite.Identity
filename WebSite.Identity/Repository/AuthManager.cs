@@ -92,7 +92,7 @@ namespace WebSite.Identity.Repository
 
             if (user == null || user.Id != tokenJsonModel.UserId)
             {
-                return null;
+                return new AuthResponseJsonModel() { ErrorMessage = "No user found or userId doesn't match provided id." };
             }
 
             var isValidRefreshToken = await _userManager.VerifyUserTokenAsync(user, Tokens.RefreshTokenProvider, Tokens.RefreshToken, tokenJsonModel.RefreshToken);
@@ -111,7 +111,7 @@ namespace WebSite.Identity.Repository
 
             await _userManager.RemoveAuthenticationTokenAsync(user, Tokens.RefreshTokenProvider, Tokens.RefreshToken);
 
-            return null;
+            return new AuthResponseJsonModel() { ErrorMessage = "Refresh token is not valid. Prease login again."};
         }
 
         private async Task<string> CreateRefreshToken(User user)

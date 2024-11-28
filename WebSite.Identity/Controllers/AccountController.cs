@@ -46,7 +46,7 @@ namespace WebSite.Identity.Controllers
 
             if (authResponse == null) 
             {
-                return BadRequest();
+                return BadRequest("Server error while login in User.");
             }
 
             if (!string.IsNullOrEmpty(authResponse.ErrorMessage))
@@ -78,7 +78,12 @@ namespace WebSite.Identity.Controllers
 
             if (authResponse == null) 
             { 
-                return Unauthorized();
+                return BadRequest("Server error while refreshing token.");
+            }
+
+            if (!string.IsNullOrEmpty(authResponse.ErrorMessage))
+            {
+                return BadRequest(authResponse.ErrorMessage);
             }
 
             return Ok(authResponse);
@@ -91,8 +96,8 @@ namespace WebSite.Identity.Controllers
         {
             return Ok(new List<string>()
             {
-                "This is private data for Authorized",
-                "This is private data for Authorized"
+                "This is test private data for Authorized",
+                "This is test private data for Authorized"
             });
         }
 
@@ -103,8 +108,8 @@ namespace WebSite.Identity.Controllers
         {
             return Ok(new List<string>()
             {
-                "This is private data for Admin",
-                "This is private data for Admin"
+                "This is test private data for Admin",
+                "This is test private data for Admin"
             });
         }
 
@@ -112,7 +117,7 @@ namespace WebSite.Identity.Controllers
         [Route("ping")]
         public IActionResult Ping()
         {
-            return Ok("Security live!");
+            return Ok("Security service live!");
         }
     }
 }
